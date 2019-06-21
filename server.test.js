@@ -1,30 +1,34 @@
 const request = require('supertest');
+const server = require('./server');
+
+const db = require('./knexConfig');
 
 describe('GET /games', () => {
-  beforeAll(() => {
-    return db('games').del();
+  beforeAll(async () => {
+    await db('games').del();
   });
 
-  test('if we get an empty list of games', () => {
-    return request(server)
+  test('if we get an empty list of games', async () => {
+    await request(server)
       .get('/games')
-      .expect(200)
-      .expect(db('games'))
-      .toHaveLength(0);
-  });
-  test('if we get a list of games', () => {
-    request(server)
-      .post('/games')
-      .send({
-        title: 'Pacman',
-        genre: 'Arcade',
-        releaseYear: 1980
-      });
+      .expect(200);
 
-    return request(server)
-      .get('/games')
-      .expect(db('games'))
-      .toHaveLength(1);
+    const games = await db('games');
+    await expect(games).toHaveLength(0);
+  });
+
+  test('if we get a list of games', async () => {
+    await db('games').insert({
+      title: 'Pacman',
+      genre: 'Arcade',
+      releaseYear: 1980
+    });
+
+    await request(server).get('/games');
+
+    const games = await db('games');
+
+    await expect(games).toHaveLength(1);
   });
 });
 
@@ -33,8 +37,8 @@ describe('POST /games', () => {
     return db('games').del();
   });
 
-  test('if game is created', () => {
-    request(server)
+  test('if game is created', async () => {
+    await request(server)
       .post('/games')
       .send({
         title: 'Pacman',
@@ -44,7 +48,8 @@ describe('POST /games', () => {
       .expect(201);
   });
 
-  test('if title is required', () => {
+  test('if title is required', async () => {
+    await request(server);
     request(server)
       .post('/games')
       .send({
@@ -55,7 +60,8 @@ describe('POST /games', () => {
       .expect(422);
   });
 
-  test('if genre is required', () => {
+  test('if genre is required', async () => {
+    await request(server);
     request(server)
       .post('/games')
       .send({
@@ -66,7 +72,8 @@ describe('POST /games', () => {
       .expect(422);
   });
 
-  test('if releaseYear is required', () => {
+  test('if releaseYear is optional', async () => {
+    await request(server);
     request(server)
       .post('/games')
       .send({

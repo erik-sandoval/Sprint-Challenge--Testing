@@ -6,9 +6,9 @@ module.exports = {
 };
 
 function getGames() {
-  return db;
+  return db('games')
 }
 
 function insert(game) {
-  return db.insert(game);
+  return db('games').insert(game)
 }
